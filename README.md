@@ -7,8 +7,6 @@ Para finalizar:
 
     docker compose down
 
+Para acceder:
 
-Para acceder https://localhost:6901
-
-usuario kasm_user
-password abc123.
+    docker compose exec cliente firefox
