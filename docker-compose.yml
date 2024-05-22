@@ -1,29 +1,63 @@
 version: '3'
 services:
-  dns_server:
-    build: dns
-    command: --addn-hosts=/etc/custom_hosts
-    volumes:
-      - ./dns/lista.txt:/etc/custom_hosts:ro
-    networks:
-      my_network:
-        ipv4_address: 192.168.46.4      
-  cliente-firefox:
-    image: kasmweb/firefox:1.14.0
+  nginx:
+    image: nginx:latest
     ports:
-     - 6901:6901
-    environment:
-      - VNC_PW=abc123.  #Usuario kasm_user
-    dns:
-     - 192.168.46.4
+      - 80:80
+      - 443:443
+    networks:
+      rede_wan:
+        ipv4_address: 192.168.47.20
+        aliases:
+          - omeusitio.lan
+      my_network:
+        ipv4_address: 192.168.46.40       
+    volumes:
+      - ./nginx/vhost.conf:/etc/nginx/conf.d/vhost.conf
+      - ./ssl:/etc/ssl
+  apache1:
+    hostname: apache
+    build: apache
     networks:
       my_network:
-  cliente:
-    build: cliente
-    dns:
-     - 192.168.46.4
+        ipv4_address: 192.168.46.50
+
+    volumes:
+      - ./apache/balanceador.conf:/etc/apache2/sites-enabled/balanceador.conf
+      - ./omeusitio.lan:/var/www/omeusitio.lan
+
+  apache2:
+    hostname: apache2
+    build: apache
     networks:
-      my_network:    
+      my_network:
+        ipv4_address: 192.168.46.51
+
+    volumes:
+      - ./apache/balanceador.conf:/etc/apache2/sites-enabled/balanceador.conf
+      - ./omeusitio.lan:/var/www/omeusitio.lan
+
+  apache3:
+    hostname: apache3
+    build: apache
+    networks:
+      my_network:
+        ipv4_address: 192.168.46.52
+
+    volumes:
+      - ./apache/balanceador.conf:/etc/apache2/sites-enabled/balanceador.conf
+      - ./omeusitio.lan:/var/www/omeusitio.lan
+
+  cliente:
+    hostname: cliente
+    build: cliente
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    networks:
+      rede_wan:
+        ipv4_address: 192.168.47.150
       
 
 
@@ -34,3 +68,8 @@ networks:
       driver: default
       config:
         - subnet: 192.168.46.0/24
+  rede_wan:
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.47.0/24  
